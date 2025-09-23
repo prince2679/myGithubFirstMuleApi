@@ -1,24 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="912c92fe-48fa-4815-b63b-ebf3bb11f1ff" >
-		<http:listener-connection host="0.0.0.0" port="8081" />
-	</http:listener-config>
-	<flow name="testFlow" doc:id="fb45ec91-83cd-41c9-b3be-b123e0eb856e" >
-		<http:listener doc:name="Listener" doc:id="8eb83332-4e5b-4eb1-98e5-c8bb093fa5b1" config-ref="HTTP_Listener_config" path="/test"/>
-		<ee:transform doc:name="Transform Message" doc:id="6e32290a-bb1c-49c7-9b39-ae4d5b40503f" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener Config">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+
+    <flow name="badFlow" doc:id="2e94dff8-d3d3-4315-8a15-0e29e63d5860">
+        <http:listener config-ref="HTTP_Listener_config" path="/test" doc:name="Listener"/>
+        
+        <!-- Bad practices -->
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	"message" : "Hello Welcome to mule 4 "
+    "message": "Hello bad Mule",
+    "hardcodedKey": "12345",  // Bad: secret in code
+    "unusedVar": null
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-	</flow>
+            </ee:message>
+        </ee:transform>
+
+        <logger level="INFO" message="Redundant log"/>
+        
+        <choice doc:name="Choice Router">
+            <when expression="#[payload == 'test']">
+                <logger level="INFO" message="Payload is test"/>
+            </when>
+            <otherwise>
+                <logger level="INFO" message="Payload is not test"/>
+                <set-variable variableName="temp" value="#[payload]"/> <!-- unused variable -->
+            </otherwise>
+        </choice>
+
+        <error-handler doc:name="Error Handler">
+            <on-error-continue enableNotifications="false" logException="false"/>
+        </error-handler>
+    </flow>
+
+    <sub-flow name="deadSubflow">
+        <logger level="INFO" message="This subflow is never called"/>
+    </sub-flow>
+
 </mule>
