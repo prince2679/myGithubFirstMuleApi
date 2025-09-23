@@ -1,26 +1,30 @@
 version = 1
 
-# Java analyzer
+# Java analyzer for Mule project
 [[analyzers]]
 name = "java"
 enabled = true
+  [analyzers.meta]
+  runtime_version = "17"
+  # Source folder for Java/Mule modules
+  paths = ["src"]
+  build_command = "mvn clean compile"
 
-[analyzers.meta]
-runtime_version = "17"
-build_command = "mvn clean compile"
-
-# Optional YAML analyzer for Mule XML/YAML configs
+# YAML/XML analyzer for Mule configuration files
 [[analyzers]]
 name = "yaml"
 enabled = true
+  [analyzers.meta]
+  paths = ["src/main/mule"]
 
-# Auto-formatting transformer for Java
+# Optional: Auto-formatting for Java code
 [[transformers]]
 name = "java-format"
 enabled = true
 
-# Ignore unnecessary directories
+# Ignore unnecessary or generated folders
 ignore_patterns = [
     "exchange-docs/*",
-    "target/*"
+    "target/*",
+    ".github/*"
 ]
