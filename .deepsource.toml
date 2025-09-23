@@ -13,7 +13,7 @@ enabled = true
 name = "yaml"
 enabled = true
 
-# Auto-formatting for Java
+# Auto-formatting transformer for Java
 [[transformers]]
 name = "java-format"
 enabled = true
